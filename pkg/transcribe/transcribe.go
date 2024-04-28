@@ -89,6 +89,15 @@ func AsWords(dir, language, model string, fileExtensions []string) ([]Word, erro
 		}
 		allWords = append(allWords, words...)
 	}
+	slices.SortFunc(allWords, func(a, b Word) int {
+		if a.StartTime < b.StartTime {
+			return -1
+		}
+		if a.StartTime > b.StartTime {
+			return 1
+		}
+		return 0
+	})
 	return allWords, nil
 }
 
@@ -162,7 +171,7 @@ type WhisperxResult struct {
 
 // ToLines converts all of the given words to lines of text.
 // A line of text will always be spoken by one speaker, so if speakers switch
-// there will be a new line. There will also be a new line if no speaker is speaking for more than 3 seconds.
+// there will be a new line. There will also be a new line if no speaker is speaking for more than 5 seconds.
 func ToLines(words []Word) []Line {
 	if len(words) == 0 {
 		return nil
@@ -175,7 +184,7 @@ func ToLines(words []Word) []Line {
 		if i == 0 {
 			continue
 		}
-		if lastWord.Nickname == currentWord.Nickname && (currentWord.StartTime-lastWord.StartTime) < 3 {
+		if lastWord.Nickname == currentWord.Nickname && (currentWord.StartTime-lastWord.StartTime) < 5 {
 			// Word is in streak
 			continousWords = append(continousWords, currentWord)
 			lastWord = currentWord
