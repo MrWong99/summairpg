@@ -119,7 +119,7 @@ func transcribeWhisperx(req transcribeRequest) ([]Word, error) {
 		"--batch_size", "4", "--task", "transcribe", "--output_dir", req.outDir, "--output_format", "json", "--language", req.language, abs)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, errors.Join(err, fmt.Errorf("could not run %s, output:\n%s", cmd, out))
+		return nil, errors.Join(err, fmt.Errorf("could not run %s, output: %s", cmd, out))
 	}
 	outFile := filepath.Join(req.outDir, nickname+".json")
 	f, err := os.Open(outFile)
@@ -198,6 +198,45 @@ func ToLines(words []Word) []Line {
 	}
 	lines = append(lines, asLine(continousWords))
 	return lines
+}
+
+// LinesFromFile can be used to read all transcription lines from an input file.
+// The Word.StartTime will just be arbitrarily increased by 0.2 for each word.
+func LinesFromFile(file string) ([]Line, error) {
+	content, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	readLines := strings.Split(string(content), "\n")
+	readLines = slices.DeleteFunc(readLines, func(line string) bool {
+		return strings.TrimSpace(line) == ""
+	})
+
+	lines := make([]Line, len(readLines))
+	currentTimestamp := float64(0)
+	for i, line := range readLines {
+		colonPos := strings.Index(line, ": ")
+		if colonPos <= 0 {
+			return nil, fmt.Errorf("invalid line %d in transcription file, no 'Nickname: ' found", i)
+		}
+		nickname := line[0:colonPos]
+		words := strings.Split(line[colonPos+2:], " ")
+		l := Line{
+			Nickname: nickname,
+			Words:    make([]Word, len(words)),
+		}
+		for j, word := range words {
+			l.Words[j] = Word{
+				Nickname:  nickname,
+				Text:      word,
+				StartTime: currentTimestamp,
+			}
+			currentTimestamp += 0.2
+		}
+		lines[i] = l
+	}
+	return lines, nil
 }
 
 func asLine(words []Word) Line {
