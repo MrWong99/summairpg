@@ -20,11 +20,11 @@ jobs:
         run: |
           go get -v -t -d ./...
       - name: Build Linux
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v . -o summairpg-linux
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o summairpg-linux . 
       - name: Build darwin
-        run: CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -v . -o summairpg-darwin
+        run: CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -v -o summairpg-darwin . 
       - name: Build windows
-        run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v . -o -o summairpg.exe
+        run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v -o summairpg.exe . 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
