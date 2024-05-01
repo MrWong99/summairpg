@@ -1,4 +1,6 @@
 .env
-summairpg
+summairpg-linux
+summairpg-darwin
+summairpg.exe
 summairpg-config.json
 transcript.txt

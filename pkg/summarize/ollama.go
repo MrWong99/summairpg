@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/MrWong99/summairpg/pkg/transcribe"
+	"github.com/sashabaranov/go-openai"
 )
 
 // OllamaClient to use when addressing the Ollama API.
@@ -17,18 +19,39 @@ type OllamaClient struct {
 	Address string
 	// Model of AI to use.
 	Model string
+	// ContextLength to set (num_ctx).
+	ContextLength int
 	// HttpClient to use when making requests.
 	HttpClient *http.Client
 }
 
-// NewOllamaClient creates a new OllamaClient using the http.DefaultClient
+// NewOllamaClient creates a new OllamaClient using the http.DefaultClient and a context length determined by the model.
 func NewOllamaClient(address, model string) *OllamaClient {
 	oc := OllamaClient{
-		Address:    address,
-		Model:      model,
-		HttpClient: http.DefaultClient,
+		Address:       address,
+		Model:         model,
+		ContextLength: contextLengthByModel(model),
+		HttpClient:    http.DefaultClient,
 	}
 	return &oc
+}
+
+func contextLengthByModel(model string) int {
+	modelWithoutTag := strings.Split(model, ":")[0]
+	switch modelWithoutTag {
+	case "llama2":
+		return 4096
+	case "llama3", "mistral":
+		return 8192
+	case "llama3-gradient":
+		return 32768 // just one value, would be better to calculate based on input
+	case "phi3":
+		return 128000
+	case "mixtral":
+		return 64000
+	default:
+		return 2048
+	}
 }
 
 // OllamaChatRequest HTTP body to send for the Summarize method.
@@ -41,6 +64,17 @@ type OllamaChatRequest struct {
 	} `json:"messages"`
 	Stream  bool           `json:"stream"`
 	Options map[string]any `json:"options"`
+}
+
+func (cr *OllamaChatRequest) toOpenAIMessages() []openai.ChatCompletionMessage {
+	res := make([]openai.ChatCompletionMessage, len(cr.Messages))
+	for i, msg := range cr.Messages {
+		res[i] = openai.ChatCompletionMessage{
+			Role:    msg.Role,
+			Content: msg.Content,
+		}
+	}
+	return res
 }
 
 // OllamaChatResponse HTTP body returned by Ollama
@@ -77,6 +111,17 @@ func (c *OllamaClient) Summarize(lines []transcribe.Line) (string, error) {
 			},
 		},
 		Stream: false,
+		Options: map[string]any{
+			"num_ctx": c.ContextLength,
+		},
+	}
+	tokenCount := NumTokensFromMessages(chatReq.toOpenAIMessages())
+	if tokenCount > c.ContextLength-500 { // leave some tokens spare so AI can answer
+		slog.Warn("input token count is very close or bigger than context length", "tokens", tokenCount, "context-length", c.ContextLength)
+		if strings.Split(c.Model, ":")[0] == "llama3-gradient" {
+			slog.Info("since you are using the llama3-gradient model the context length will be automatically adjusted for the bigger token count")
+			chatReq.Options["num_ctx"] = tokenCount + 500
+		}
 	}
 	res, err := json.Marshal(&chatReq)
 	if err != nil {
