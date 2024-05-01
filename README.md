@@ -50,8 +50,8 @@ With the default settings this will create a `summairpg-config.json` file contai
 These are all of the available parameters:
 
 ```
-$ ./summairpg --help
-Usage of ./summairpg:
+$ ./summairpg-linux --help
+Usage of ./summairpg-linux:
   -audio-dir string
         The directory that contains all of the audio files that should be transcribed (default "input")
   -audio-display-transcript
@@ -68,6 +68,8 @@ Usage of ./summairpg:
         Store the provided command-line arguments in the summairpg-config.json (default true)
   -ollama-address string
         The host:port of the Ollama HTTP API. (default "127.0.0.1:11434")
+  -ollama-context-length-override int
+        override the context length (num_ctx) that would else be determined by the model
   -ollama-enabled
         set to false to disable the Ollama endpoint for summarization (default true)
   -ollama-model string
