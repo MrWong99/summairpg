@@ -71,6 +71,9 @@ func evaluateSummary(cfg *config.App, lines []transcribe.Line) {
 	case cfg.Ollama.Enabled:
 		slog.Info("starting summary now", "model", cfg.Ollama.Model, "address", cfg.Ollama.Address)
 		oc := summarize.NewOllamaClient(cfg.Ollama.Address, cfg.Ollama.Model)
+		if cfg.Ollama.ContextLengthOverride > 0 {
+			oc.ContextLength = cfg.Ollama.ContextLengthOverride
+		}
 		if cfg.Ollama.UpdateModel {
 			slog.Info("updating Ollama model", "model", cfg.Ollama.Model)
 			if err := oc.UpdateModel(); err != nil {

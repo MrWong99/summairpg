@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -43,19 +44,24 @@ func (c *OpenAIClient) Summarize(lines []transcribe.Line) (string, error) {
 		fullText += "\n" + line.String()
 	}
 	fullText = strings.TrimPrefix(fullText, "\n")
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    "system",
+			Content: summarySystemPrompt,
+		},
+		{
+			Role:    "user",
+			Content: fullText,
+		},
+	}
+	tokenCount := NumTokensFromMessages(messages)
+	if tokenCount > 32000 {
+		slog.Warn("input token count is bigger than 32K", "tokens", tokenCount)
+	}
 	ctx := context.Background()
 	resp, err := c.Client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: c.Model,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    "system",
-				Content: summarySystemPrompt,
-			},
-			{
-				Role:    "user",
-				Content: fullText,
-			},
-		},
+		Model:    c.Model,
+		Messages: messages,
 	})
 	if err != nil {
 		return "", err

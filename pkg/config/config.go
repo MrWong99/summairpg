@@ -58,6 +58,8 @@ type Ollama struct {
 	Address string `json:"address" default:"127.0.0.1:11434" usage:"The host:port of the Ollama HTTP API."`
 	// Model to use. See https://ollama.com/library
 	Model string `json:"model" default:"llama3:70b" usage:"Ollama model to use. See https://ollama.com/library"`
+	// ContextLengthOverride will override the context length (num_ctx) that would else be determined by the model.
+	ContextLengthOverride int `json:"content-length-override" default:"0" usage:"override the context length (num_ctx) that would else be determined by the model"`
 	// UpdateModel if the model should be updated or pulled before use.
 	UpdateModel bool `json:"update-model" default:"true" usage:"set to false to disable pulling the latest version of the model"`
 }
@@ -154,6 +156,8 @@ func overrideDefaultsFromConfig() error {
 			f.Value.Set(config.Ollama.Address)
 		case "ollama-model":
 			f.Value.Set(config.Ollama.Model)
+		case "ollama-content-length-override":
+			f.Value.Set(strconv.Itoa(config.Ollama.ContextLengthOverride))
 		case "ollama-update-model":
 			f.Value.Set(strconv.FormatBool(config.Ollama.UpdateModel))
 		case "openai-enabled":
