@@ -41,10 +41,8 @@ func contextLengthByModel(model string) int {
 	switch modelWithoutTag {
 	case "llama2":
 		return 4096
-	case "llama3", "mistral":
+	case "llama3", "mistral", "llama3-gradient":
 		return 8192
-	case "llama3-gradient":
-		return 32768 // just one value, would be better to calculate based on input
 	case "phi3":
 		return 128000
 	case "mixtral":
