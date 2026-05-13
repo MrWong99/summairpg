@@ -6,7 +6,7 @@ require (
 	github.com/itzg/go-flagsfiller v1.17.0
 	github.com/pkoukk/tiktoken-go v0.1.8
 	github.com/pkoukk/tiktoken-go-loader v0.0.2
-	github.com/sashabaranov/go-openai v1.27.1
+	github.com/sashabaranov/go-openai v1.41.2
 )
 
 require (
