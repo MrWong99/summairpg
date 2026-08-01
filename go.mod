@@ -3,7 +3,7 @@ module github.com/MrWong99/summairpg
 go 1.22.1
 
 require (
-	github.com/itzg/go-flagsfiller v1.18.0
+	github.com/itzg/go-flagsfiller v1.19.0
 	github.com/pkoukk/tiktoken-go v0.1.8
 	github.com/pkoukk/tiktoken-go-loader v0.0.2
 	github.com/sashabaranov/go-openai v1.41.2
